@@ -31,9 +31,7 @@ func newTestCase(sk, pk, msg, sig string) *testCase {
 		panic("Invalid hex string for signature.")
 	}
 
-	privKey := &PrivateKey{}
-	privKey.key = skBytes
-	privKey.computePublicKey()
+	privKey := PrivateKeyFromBytes(skBytes)
 
 	// early check for public key equality
 	if !bytes.Equal(pkBytes, privKey.publicKey.raw) {

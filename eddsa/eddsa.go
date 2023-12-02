@@ -70,6 +70,13 @@ func GenerateKeys() (*PrivateKey, *PublicKey) {
 	return p, p.publicKey
 }
 
+func PrivateKeyFromBytes(raw []byte) *PrivateKey {
+	privKey := &PrivateKey{}
+	privKey.key = raw
+	privKey.computePublicKey()
+	return privKey
+}
+
 func (p *PrivateKey) computePublicKey() {
 	if p.s == nil {
 		p.computeS()
