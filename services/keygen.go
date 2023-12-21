@@ -17,8 +17,9 @@ func NewKeyGenerationService() KeyGenerationService {
 	return &keyGenerationServiceImpl{}
 }
 
+// GenerateKeys creates PEM encoded key files for private and public key
 func (kg *keyGenerationServiceImpl) GenerateKeys() error {
-	privf, err := os.OpenFile("priv.txt", os.O_CREATE|os.O_WRONLY, 0644)
+	privf, err := os.OpenFile("priv.pem", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -39,7 +40,7 @@ func (kg *keyGenerationServiceImpl) GenerateKeys() error {
 		Bytes: pubKey.Bytes(),
 	}
 
-	pubf, err := os.OpenFile("pub.txt", os.O_CREATE|os.O_WRONLY, 0644)
+	pubf, err := os.OpenFile("pub.pem", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}

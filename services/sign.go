@@ -9,7 +9,8 @@ import (
 )
 
 type SignService interface {
-	SignFile(filepath string, keypath string) error
+	SignFile(filepath string, key *eddsa.PrivateKey) error
+	SignBytes(msg []byte, key *eddsa.PrivateKey) ([]byte, error)
 }
 
 type signServiceImpl struct{}
@@ -18,30 +19,22 @@ func NewSignService() SignService {
 	return &signServiceImpl{}
 }
 
-func (s *signServiceImpl) SignFile(filepath, keypathstring string) error {
-
-	kf, err := os.Open(keypathstring)
+// SignBytes signs a message and returns the signature in bytes
+func (s *signServiceImpl) SignBytes(msg []byte, privKey *eddsa.PrivateKey) ([]byte, error) {
+	sig, err := eddsa.Sign(privKey, msg)
 	if err != nil {
-		return fmt.Errorf("opening private key file: %v", err)
+		return nil, fmt.Errorf("signing input file: %v", err)
 	}
-	defer kf.Close()
-	pemEncFile, err := io.ReadAll(kf)
-	if err != nil {
-		return fmt.Errorf("reading private key file: %v", err)
-	}
+	return sig, nil
+}
 
-	block, _ := pem.Decode(pemEncFile)
-	if block == nil || block.Type != "PRIVATE KEY" {
-		return fmt.Errorf("errror decoding PEM block")
-	}
-
+// SignFile signs a file and outputs the signature in a PEM encoded file
+func (s *signServiceImpl) SignFile(filepath string, privKey *eddsa.PrivateKey) error {
 	f, err := os.Open(filepath)
 	if err != nil {
 		return fmt.Errorf("opening input file: %v", err)
 	}
 	defer f.Close()
-
-	privKey := eddsa.PrivateKeyFromBytes(block.Bytes)
 
 	input, err := io.ReadAll(f)
 	if err != nil {
@@ -53,7 +46,7 @@ func (s *signServiceImpl) SignFile(filepath, keypathstring string) error {
 		return fmt.Errorf("signing input file: %v", err)
 	}
 
-	sf, err := os.OpenFile("sig.txt", os.O_CREATE|os.O_WRONLY, 0644)
+	sf, err := os.OpenFile("sig.pem", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}

@@ -29,7 +29,7 @@ func PublicKeyFromBytes(b []byte) (*PublicKey, error) {
 }
 
 type PrivateKey struct {
-	key []byte
+	key []byte // this is also referred to as "seed"
 
 	s         *edwards25519.Scalar
 	publicKey *PublicKey
@@ -108,6 +108,8 @@ func NewPrivateKey() *PrivateKey {
 	return privKey
 }
 
+// Sign implements the signature algorithm, using a library for
+// curve edwards25519
 func Sign(privKey *PrivateKey, msg []byte) ([]byte, error) {
 	// concat the second part of the digest h with the message
 	// dom2(F, C) is empty string in ed25519
@@ -139,6 +141,7 @@ func Sign(privKey *PrivateKey, msg []byte) ([]byte, error) {
 	return append(R.Bytes(), S.Bytes()...), nil
 }
 
+// Verify verifies a signature against a public key given the message
 func Verify(sig, msg, pubkeyBytes []byte) error {
 	if len(sig) != 64 {
 		return fmt.Errorf("invalid signature length")
