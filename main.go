@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/ed25519"
 	"crypto/rand"
+	"ed/eddsa"
 	"ed/services"
 	"flag"
 	"fmt"
@@ -11,13 +12,36 @@ import (
 )
 
 func printHelp() {
-	fmt.Println("Available commands:")
-	fmt.Println("keygen")
-	fmt.Println("sign")
-	fmt.Println("verify")
-	fmt.Println("time")
-	fmt.Println("help")
+	fmt.Println(helpMsg)
 }
+
+var helpMsg = `
+Usage: ed <command> [options]
+
+Commands:
+  help     Displays help information about the commands.
+
+  keygen   Generates a pair of PEM encoded key files.
+           No additional options needed.
+
+  sign     Signs a file using a PEM encoded private key.
+           Options:
+           -input <file>       Path to the file to be signed.
+           -key <private_key>  Path to the PEM encoded private key file.
+
+  verify   Verifies a signature of a file.
+           Options:
+           -input <file>        Path to the file for signature verification.
+           -pubkey <public_key> Path to the PEM encoded public key file.
+           -signature <sig>     Path to the PEM encoded signature file.
+
+  time     Times the performance of the signing process against the standard library implementation.
+           Options:
+           -samples <number>    (Optional) Number of samples to be tested for timing. Default is 10000 if not specified.
+
+For more details on each command, use: ed <command> --help
+
+`
 
 func main() {
 	if len(os.Args) == 1 {
@@ -85,22 +109,12 @@ func main() {
 
 	case "time":
 		signCmd := flag.NewFlagSet("sign", flag.ExitOnError)
-		keyFile := signCmd.String("key", "", "Specifies the private key file")
 		samples := signCmd.Int("samples", 10000, "Specifies the number of sample signatures used to measure time")
 
 		signCmd.Parse(os.Args[2:])
-		if *keyFile == "" {
-			fmt.Println("Not enough arguments provided.")
-			os.Exit(1)
-		}
 
 		signer := services.NewSignService()
-		keyReader := services.NewKeyReaderService()
-		privKey, err := keyReader.ReadPrivatekey(*keyFile)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		privKey := eddsa.NewPrivateKey()
 
 		// Initialize a slice of random messages of size 1kb each to be signed
 		msgs := make([][]byte, 0, *samples)
@@ -129,16 +143,14 @@ func main() {
 		stdNow := time.Now()
 		for _, msg := range msgs {
 			ed25519.Sign(stdKey, msg)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
 		}
 		stdTime := time.Since(stdNow)
 
 		fmt.Printf("Samples: %d\n", *samples)
 		fmt.Printf("Implementation total time: %fs \n", time.Duration.Seconds(myTime))
+		fmt.Printf("Implementation average time: %fs \n", float64(time.Duration.Seconds(myTime))/float64(*samples))
 		fmt.Printf("Standard library total time: %fs \n", time.Duration.Seconds(stdTime))
+		fmt.Printf("Standard library average time: %fs \n", float64(time.Duration.Seconds(stdTime))/float64(*samples))
 	case "help":
 		printHelp()
 	default:
