@@ -10,13 +10,19 @@ import (
 	"time"
 )
 
+func printHelp() {
+	fmt.Println("Available commands:")
+	fmt.Println("keygen")
+	fmt.Println("sign")
+	fmt.Println("verify")
+	fmt.Println("time")
+	fmt.Println("help")
+}
+
 func main() {
 	if len(os.Args) == 1 {
-		fmt.Println("No command provided. Available commands:")
-		fmt.Println("keygen")
-		fmt.Println("sign")
-		fmt.Println("verify")
-		fmt.Println("time")
+		fmt.Println("No command provided.")
+		printHelp()
 		os.Exit(0)
 	}
 	command := os.Args[1]
@@ -133,5 +139,10 @@ func main() {
 		fmt.Printf("Samples: %d\n", *samples)
 		fmt.Printf("Implementation total time: %fs \n", time.Duration.Seconds(myTime))
 		fmt.Printf("Standard library total time: %fs \n", time.Duration.Seconds(stdTime))
+	case "help":
+		printHelp()
+	default:
+		fmt.Println("Invalid command.")
+		printHelp()
 	}
 }
